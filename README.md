@@ -94,8 +94,9 @@ or write to installazione@flyitalyadsb.com with the last twenty lines of both lo
 
 - `flyitalyadsb-feed`: our readsb fork, sending the decoder's data to
   `dati.flyitalyadsb.com`.
-- `flyitalyadsb-mlat`: our mlat-client fork, with a daily update timer
-  (`flyitalyadsb-mlat-updater.timer`).
+- `flyitalyadsb-mlat`: our mlat-client fork in its own Python venv, with a daily update timer
+  (`flyitalyadsb-mlat-updater.timer`). On Python 3.12 and later the venv also gets
+  `setuptools` and `pyasyncore`, which newer Pythons no longer include.
 - The receiver's UUID in `/usr/local/share/flyitalyadsb/flyitalyadsb-uuid`: the feed and
   mlat-client both send it, and Lightcone and the feeder pages know your receiver by it.
 - `flyitalyadsb-lightcone` in `/usr/local/bin`, and the configuration in
@@ -106,6 +107,9 @@ or write to installazione@flyitalyadsb.com with the last twenty lines of both lo
 ```
 sudo bash /usr/local/share/flyitalyadsb/uninstall.sh
 ```
+
+It keeps the receiver's UUID (`/usr/local/share/flyitalyadsb/flyitalyadsb-uuid`): if you
+install again, it stays the same receiver for Lightcone and the feeder pages.
 
 It also removes the old statistics package (`flyitalyadsb-stats`) if the receiver still has
 it: Lightcone replaces it. The tar1090 map and graphs1090 have their own uninstall scripts.
@@ -151,8 +155,9 @@ da un dispositivo sulla rete del ricevitore. Problemi:
 [contattaci](https://flyitalyadsb.com/contatti/?utm_source=github&utm_campaign=fly-italy-adsb)
 o scrivi a installazione@flyitalyadsb.com.
 
-**Rimozione:** `sudo bash /usr/local/share/flyitalyadsb/uninstall.sh`. Toglie anche il vecchio
-pacchetto di statistiche (`flyitalyadsb-stats`), se il ricevitore ce l'ha ancora: lo sostituisce
-Lightcone.
+**Rimozione:** `sudo bash /usr/local/share/flyitalyadsb/uninstall.sh`. Tiene l'UUID del
+ricevitore (`/usr/local/share/flyitalyadsb/flyitalyadsb-uuid`): se reinstalli, resta lo stesso
+ricevitore per Lightcone e le pagine dei feeder. Toglie anche il vecchio pacchetto di
+statistiche (`flyitalyadsb-stats`), se il ricevitore ce l'ha ancora: lo sostituisce Lightcone.
 
 </details>

@@ -250,8 +250,15 @@ cp uninstall.sh $IPATH >> $LOGFILE  2>&1
 
 
         rm "$VENV" -rf
+        # Since Python 3.12 a new venv has no setuptools (setup.py needs it) and
+        # asyncore (mlat-client uses it) is no longer in the standard library:
+        # install them in the venv, only when they are missing.
         /usr/bin/python3 -m venv $VENV >> $LOGFILE 2>&1 && echo 36 \
             && source $VENV/bin/activate >> $LOGFILE 2>&1 && echo 38 \
+            && { "$VENV/bin/python3" -c 'import setuptools' 2>/dev/null \
+                || "$VENV/bin/pip" install --quiet --disable-pip-version-check setuptools >> "$LOGFILE" 2>&1; } \
+            && { "$VENV/bin/python3" -c 'import asyncore' 2>/dev/null \
+                || "$VENV/bin/pip" install --quiet --disable-pip-version-check pyasyncore >> "$LOGFILE" 2>&1; } \
             && python3 setup.py build >> $LOGFILE 2>&1 && echo 40 \
             && python3 setup.py install >> $LOGFILE 2>&1 \
             && git rev-parse HEAD > $IPATH/mlat_version 2>> $LOGFILE

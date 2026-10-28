@@ -22,9 +22,15 @@ fi
 
 systemctl daemon-reload
 
-rm -rf "$IPATH"
+# Everything in $IPATH except the receiver's UUID: after a reinstall it stays
+# the same receiver for Lightcone and the feeder pages.
+find "$IPATH" -mindepth 1 -maxdepth 1 ! -name flyitalyadsb-uuid -exec rm -rf {} +
 
 set +x
 
 echo -----
 echo "flyitalyadsb feed scripts have been uninstalled!"
+echo "The receiver's UUID is kept in $IPATH/flyitalyadsb-uuid:"
+echo "if you install again, it stays the same receiver for Lightcone and the feeder pages."
+echo "L'UUID del ricevitore resta in $IPATH/flyitalyadsb-uuid:"
+echo "se reinstalli, resta lo stesso ricevitore per Lightcone e le pagine dei feeder."
