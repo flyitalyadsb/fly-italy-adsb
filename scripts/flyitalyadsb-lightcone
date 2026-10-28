@@ -1,0 +1,242 @@
+#!/bin/bash
+# flyitalyadsb-lightcone: asks FlyItalyADSB for a receiver code for Lightcone.
+#
+# Lightcone shows the aircraft that passed near your receiver that it did not
+# receive, and how you compare with the receivers near you. Opened from the
+# receiver's network, the page already recognises the receiver; the code links
+# a device to it for 90 days, also from other networks, and shows terrain,
+# readings and records too.
+#
+# Run it on the receiver: the request has to leave from the same address the
+# receiver sends its MLAT data from. The code lasts 10 minutes and works once.
+#
+# Usage: flyitalyadsb-lightcone [--name <MLAT name>] [--it|--en]
+#
+# Exit status: 0 code printed, 2 no MLAT data from this address yet,
+# 3 too many requests, 4 network or service problem, 5 several receivers
+# share this address, 1 anything else.
+
+API="${FLYITALYADSB_CLAIM_URL:-https://api.flyitalyadsb.com/v2/receiver/claim}"
+CONFIG="${FLYITALYADSB_CONFIG:-/etc/default/flyitalyadsb}"
+
+# The UUID the mlat-client fork sends, read in the same order it reads it.
+UUID_FILES="/boot/flyitalyadsb-uuid /usr/local/share/flyitalyadsb/flyitalyadsb-uuid"
+
+FLYITALYADSB_LANG=en
+UTENTE=""
+if [[ -r $CONFIG ]]; then
+    FLYITALYADSB_LANG=$(sed -n 's/^[[:space:]]*FLYITALYADSB_LANG="\{0,1\}\([a-z]*\)"\{0,1\}.*/\1/p' "$CONFIG" | tail -n 1)
+    UTENTE=$(sed -n 's/^[[:space:]]*UTENTE="\(.*\)".*/\1/p' "$CONFIG" | tail -n 1)
+fi
+
+NAME=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --name) NAME="${2:-}"; shift ;;
+        --it) FLYITALYADSB_LANG=it ;;
+        --en) FLYITALYADSB_LANG=en ;;
+        -h|--help)
+            sed -n '2,17s/^# \{0,1\}//p' "$0"
+            exit 0 ;;
+        *) echo "Unknown option: $1 (try --help)" >&2; exit 1 ;;
+    esac
+    shift
+done
+[[ $FLYITALYADSB_LANG == it ]] || FLYITALYADSB_LANG=en
+
+if [[ $FLYITALYADSB_LANG == it ]]; then
+    PAGE="https://flyitalyadsb.com/community/lightcone/"
+else
+    PAGE="https://flyitalyadsb.com/en/community/lightcone/"
+fi
+
+UUID=""
+for f in $UUID_FILES; do
+    if [[ -r $f ]]; then
+        UUID=$(head -n 1 "$f" | tr -cd '0-9a-fA-F')
+        [[ ${#UUID} -eq 32 ]] && break
+        UUID=""
+    fi
+done
+
+say() {
+    local key=$1
+    if [[ $FLYITALYADSB_LANG == it ]]; then
+        case "$key" in
+            ok) cat <<EOF
+Lightcone: $PAGE
+Codice del ricevitore: $2
+Inseriscilo in quella pagina entro 10 minuti: vale una volta
+sola. Il dispositivo dove lo inserisci resta collegato per 90
+giorni, anche da altre reti, e vede anche terreno, letture e
+record. Non viene accettato? Esegui: flyitalyadsb-lightcone
+EOF
+            ;;
+            notyet) cat <<EOF
+Lightcone: $PAGE
+Ancora nessun codice: da questo indirizzo non ci arrivano
+ancora dati MLAT. Subito dopo l'installazione è normale: la
+MLAT si collega in qualche minuto. Riprova tra 5 minuti con:
+  flyitalyadsb-lightcone
+Ancora niente? Controlla: sudo systemctl status flyitalyadsb-mlat
+EOF
+            ;;
+            several) cat <<EOF
+Più ricevitori mandano dati da questo indirizzo. Indica il
+nome MLAT di questo ricevitore:
+  flyitalyadsb-lightcone --name <nome MLAT>
+EOF
+            ;;
+            slow) cat <<EOF
+Troppe richieste da questo indirizzo. Aspetta un minuto e
+riprova con: flyitalyadsb-lightcone
+EOF
+            ;;
+            offline) cat <<EOF
+Non riesco a raggiungere api.flyitalyadsb.com. Controlla la
+connessione a internet del ricevitore e riprova con:
+  flyitalyadsb-lightcone
+EOF
+            ;;
+            down) cat <<EOF
+Il servizio non risponde in questo momento. Riprova tra
+qualche minuto con: flyitalyadsb-lightcone
+EOF
+            ;;
+            other) cat <<EOF
+Risposta inattesa dal server (HTTP $2). Riprova più tardi o
+scrivi a installazione@flyitalyadsb.com
+EOF
+            ;;
+        esac
+    else
+        case "$key" in
+            ok) cat <<EOF
+Lightcone: $PAGE
+Receiver code: $2
+Enter it on that page within 10 minutes: it works once. The
+device where you enter it stays linked for 90 days, also from
+other networks, and also sees terrain, readings and records.
+Code not accepted? Run: flyitalyadsb-lightcone
+EOF
+            ;;
+            notyet) cat <<EOF
+Lightcone: $PAGE
+No code yet: no MLAT data has reached us from this address so
+far. Right after installation this is normal: MLAT connects in
+a few minutes. Try again in 5 minutes with:
+  flyitalyadsb-lightcone
+Still nothing? Check: sudo systemctl status flyitalyadsb-mlat
+EOF
+            ;;
+            several) cat <<EOF
+Several receivers send data from this address. Give the MLAT
+name of this receiver:
+  flyitalyadsb-lightcone --name <MLAT name>
+EOF
+            ;;
+            slow) cat <<EOF
+Too many requests from this address. Wait a minute, then try
+again with: flyitalyadsb-lightcone
+EOF
+            ;;
+            offline) cat <<EOF
+Could not reach api.flyitalyadsb.com. Check the receiver's
+internet connection, then try again with:
+  flyitalyadsb-lightcone
+EOF
+            ;;
+            down) cat <<EOF
+The service is not responding right now. Try again in a few
+minutes with: flyitalyadsb-lightcone
+EOF
+            ;;
+            other) cat <<EOF
+Unexpected answer from the server (HTTP $2). Try again later,
+or write to installazione@flyitalyadsb.com
+EOF
+            ;;
+        esac
+    fi
+}
+
+json_string() {
+    local s=$1
+    s=${s//\\/\\\\}
+    s=${s//\"/\\\"}
+    printf '"%s"' "$s"
+}
+
+BODY_FILE=$(mktemp) || exit 1
+trap 'rm -f "$BODY_FILE"' EXIT
+
+STATUS=""
+REMOTE_IP=""
+RESPONSE=""
+
+# claim <json body> [curl option]: sets STATUS, REMOTE_IP and RESPONSE.
+# Returns curl's exit status.
+claim() {
+    local out rc
+    out=$(curl -sS ${2:+"$2"} --connect-timeout 10 --max-time 20 \
+        -o "$BODY_FILE" -w '%{http_code} %{remote_ip}' \
+        -X POST -H 'Content-Type: application/json' -d "$1" "$API" 2>/dev/null)
+    rc=$?
+    STATUS=${out%% *}
+    REMOTE_IP=${out#* }
+    RESPONSE=$(cat "$BODY_FILE" 2>/dev/null)
+    return $rc
+}
+
+# Name this receiver as precisely as we can: a name given on the command line,
+# else the UUID (what the MLAT server uses when there is one), else the MLAT
+# name. With nothing, the server picks the only receiver at this address.
+if [[ -n $NAME ]]; then
+    BODY="{\"name\": $(json_string "$NAME")}"
+elif [[ -n $UUID ]]; then
+    BODY="{\"uuid\": \"$UUID\"}"
+elif [[ -n $UTENTE ]]; then
+    BODY="{\"name\": $(json_string "$UTENTE")}"
+else
+    BODY="{}"
+fi
+
+if ! claim "$BODY"; then
+    say offline
+    exit 4
+fi
+
+# No MLAT data from this address: the receiver may send MLAT over the other
+# IP version (IPv4 or IPv6) than this request. Ask once over the other one.
+if [[ $STATUS == 404 && $RESPONSE != *"name or UUID"* ]]; then
+    if [[ $REMOTE_IP == *:* ]]; then OTHER=-4; else OTHER=-6; fi
+    SAVED_STATUS=$STATUS SAVED_RESPONSE=$RESPONSE
+    if ! claim "$BODY" "$OTHER"; then
+        STATUS=$SAVED_STATUS RESPONSE=$SAVED_RESPONSE
+    fi
+fi
+
+# Receivers send from here, but none with this UUID: the MLAT server may know
+# this receiver by its name only.
+if [[ $STATUS == 404 && $RESPONSE == *"name or UUID"* && -z $NAME && -n $UUID && -n $UTENTE ]]; then
+    if ! claim "{\"name\": $(json_string "$UTENTE")}"; then
+        say offline
+        exit 4
+    fi
+fi
+
+case "$STATUS" in
+    200)
+        CODE=$(printf '%s' "$RESPONSE" | sed -n 's/.*"code"[[:space:]]*:[[:space:]]*"\([A-Za-z0-9]\{8\}\)".*/\1/p')
+        if [[ -z $CODE ]]; then
+            say other "$STATUS"
+            exit 1
+        fi
+        say ok "${CODE:0:4}-${CODE:4:4}"
+        exit 0 ;;
+    404) say notyet; exit 2 ;;
+    409) say several; exit 5 ;;
+    429) say slow; exit 3 ;;
+    5??) say down; exit 4 ;;
+    *) say other "$STATUS"; exit 1 ;;
+esac
