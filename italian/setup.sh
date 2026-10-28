@@ -54,8 +54,8 @@
 
 function abort() {
     echo ------------
-    echo "Intallazione annullata (probabilmente premendo ESC)!"
-    echo "Per favore esegui nuovamente questo script se non era tua intenzione"
+    echo "Installazione annullata (probabilmente premendo ESC)."
+    echo "Se non volevi, esegui di nuovo questo script."
     echo ------------
     exit 1
 }
@@ -96,7 +96,7 @@ LOGDIRECTORY="$PWD/logs"
 
 BACKTITLETEXT="Script di installazione del feed di FlyItalyADSB"
 
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Grazie per aver scelto di condividere i tuoi dati con FlyItalyADSB.\n\nFlyItalyADSB è una rete community nata in Italia, con ricevitori in tutto il mondo. Questo script configura il tuo ricevitore per mandare i dati e la MLAT a FlyItalyADSB.\n\nVuoi continuare con l'installazione?" 13 78
+whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Grazie per aver scelto di condividere i tuoi dati con FlyItalyADSB, una rete community globale, nata in Italia nel 2020.\n\nQuesto script manda a FlyItalyADSB i dati e la MLAT del tuo ricevitore. Serve un decoder che gira già su questo dispositivo (dump1090-fa, readsb, PiAware, FR24...). Parti da zero? Segui invece la guida per i feeder:\nhttps://flyitalyadsb.com/community/feeder/\n\nCosa ottieni: l'API con i limiti Pro, gratis, per uso non commerciale, e Lightcone: gli aerei passati vicino al tuo ricevitore che non ha ricevuto.\n\nVuoi continuare con l'installazione?" 20 78
 if [[ $? != 0 ]]; then abort; fi
 
 FLYITALYADSB_=$(whiptail --backtitle "$BACKTITLETEXT" --title "Nome utente" --nocancel --inputbox "\nPer favore inserisci un nome per il tuo ricevitore: lo identifica nella rete MLAT.\n\nUsa solo lettere e numeri.\nEsempio: \"Giorgio34\", \"Piacenza1\", etc." 12 78 3>&1 1>&2 2>&3)
@@ -104,9 +104,9 @@ FLYITALYADSB_=$(whiptail --backtitle "$BACKTITLETEXT" --title "Nome utente" --no
 if [[ $? != 0 ]]; then abort; fi
 
 whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" \
-    --msgbox "Affinché la multilaterazione funzioni inserisci con precisione la posizione dell'antenna\
-    \n\nUn errore di 5 metri causerà gravi problemi!\
-    \n\nPer ottenere le coordinate puoi usare un sito web come mapcoordinates.net" 12 78
+    --msgbox "La MLAT ha bisogno della posizione esatta dell'antenna.\
+    \n\nUn errore di 5 metri causa già gravi problemi.\
+    \n\nPer trovare le coordinate puoi usare un sito come mapcoordinates.net" 12 78
 
 if [[ $? != 0 ]]; then abort; fi
 
@@ -129,11 +129,11 @@ done
 
 ALT=""
 until [[ $ALT =~ ^(.*)ft$ ]] || [[ $ALT =~ ^(.*)m$ ]]; do
-    ALT=$(whiptail --backtitle "$BACKTITLETEXT" --title "Altitudine sul livello del mare dell'antenna:" \
+    ALT=$(whiptail --backtitle "$BACKTITLETEXT" --title "Altitudine dell'antenna sul livello del mare" \
         --nocancel --inputbox \
-"\nInserisci la l'altitudine includendo l'unità:\n\n\
-In piedi così:                   255ft\n\
-o in metri così:               78m\n" \
+"\nInserisci l'altitudine con la sua unità:\n\n\
+in piedi:                  255ft\n\
+o in metri:                78m\n" \
         12 78 3>&1 1>&2 2>&3)
     if [[ $? != 0 ]]; then abort; fi
 done
@@ -283,7 +283,7 @@ cp uninstall.sh $IPATH >> $LOGFILE  2>&1
     echo 70
     sleep 0.25
 
-    # SETUP FEEDER TO SEND DUMP1090 DATA TO FLY ITALY ADSB
+    # SETUP FEEDER TO SEND DUMP1090 DATA TO FLYITALYADSB
 
     echo "" >> $LOGFILE
     echo " COMPILANDO E INSTALLANDO IL FEED" >> $LOGFILE
@@ -333,11 +333,22 @@ cp uninstall.sh $IPATH >> $LOGFILE  2>&1
     cp $PWD/scripts/flyitalyadsb-feed.sh $IPATH >> $LOGFILE 2>&1
     cp $PWD/scripts/flyitalyadsb-feed.service /lib/systemd/system >> $LOGFILE 2>&1
 
+    # Lightcone: il comando che chiede il codice del ricevitore, ora e dopo
+    install -D -m 755 "$PWD/scripts/flyitalyadsb-lightcone" /usr/local/bin/flyitalyadsb-lightcone >> "$LOGFILE" 2>&1
+
+    # Il vecchio pacchetto di statistiche (flyitalyadsb-stats) manda a un server
+    # che non esiste più: lo sostituisce Lightcone. Qui lo fermo; uninstall.sh lo toglie.
+    if [ -f /etc/systemd/system/flyitalyadsb-stats.service ]; then
+        systemctl disable --now flyitalyadsb-stats.service >> "$LOGFILE" 2>&1
+    fi
+
     tee /etc/default/flyitalyadsb > /dev/null 2>> $LOGFILE <<EOF
     INPUT="127.0.0.1:30005"
     REDUCE_INTERVAL="0.5"
-    # nome utente per controllare lo stato della MLAT-Multilaterazione (flyitalyadsb.com/stato-mlat)
+    # nome MLAT di questo ricevitore
     UTENTE="${NOSPACENAME}"
+    # lingua di flyitalyadsb-lightcone (en o it)
+    FLYITALYADSB_LANG="it"
     LATITUDINE="$RECEIVERLATITUDE"
     LONGITUDINE="$RECEIVERLONGITUDE"
     ALTITUDINE="$RECEIVERALTITUDE"
@@ -452,116 +463,119 @@ if [ $INTERFACCIA = 0 ]; then
     bash "$GIT/install.sh" "/run/flyitalyadsb-feed" "flyitalyadsb" >> $LOGFILE 2>&1
 }| whiptail --backtitle "$BACKTITLETEXT" --title "Impostando la mappa di FlyItalyADSB"  --gauge "\nImpostando la mappa di FlyItalyADSB.\nPotrebbe impiegarci qualche minuto..." 8 60 0
 fi
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Vuoi avere dei grafici statistici sul tuo ricevitore e una mappa\ncon i dati che stai ricevendo accessibile ovunque?" 10 70
-STATS=$?
-if [ $STATS = 0 ]; then
-{
-TMP_STATS="/tmp/graphs1090"
-rm -rf "$TMP_STATS"
-set -e
-trap 'echo "------------"; echo "[ERROR] Error in line $LINENO when executing: $BASH_COMMAND"' ERR
-BRANCH="master"
-REPO="https://github.com/wiedehopf/graphs1090"
-getGIT "$REPO" "$BRANCH" "$TMP_STATS"
-echo 25
-cd "$TMP_STATS"
-bash install.sh >> $LOGFILE 2>&1
-echo 50
-TMP_STATS="/tmp/flyitalyadsb-stats-git"
-BRANCH="main"
-REPO="https://github.com/flyitalyadsb/flyitalyadsb-stats"
-rm -rf "$TMP_STATS"
-set -e
-getGIT "$REPO" "$BRANCH" "$TMP_STATS"
-cd "$TMP_STATS"
-echo 75
-bash install.sh >> $LOGFILE 2>&1
-echo 90
-} | whiptail --backtitle "$BACKTITLETEXT" --title "Impostando il pacchetto di statistiche di FlyItalyADSB"  --gauge "\nImpostando il pacchetto di statistiche di FlyItalyADSB.\nPotrebbe impiegarci qualche minuto..." 8 60 0
+
+# graphs1090: grafici locali di quello che riceve il ricevitore. Lo chiedo solo
+# se non è già installato.
+if [ ! -d /usr/share/graphs1090 ]; then
+    whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Vuoi installare graphs1090?\n\nGrafici locali di quello che riceve il tuo ricevitore (messaggi, distanza, aerei), su questo dispositivo a tuo_ip/graphs1090.\n\nLightcone aggiunge quello che un ricevitore da solo non può vedere: gli aerei passati vicino che non ha ricevuto." 13 70
+    GRAPHS=$?
+    if [ $GRAPHS = 0 ]; then
+    {
+        set -e
+        trap 'echo "------------"; echo "[ERROR] Error in line $LINENO when executing: $BASH_COMMAND"' ERR
+        REPO="https://github.com/wiedehopf/graphs1090"
+        BRANCH="master"
+        GIT="/tmp/graphs1090"
+        getGIT "$REPO" "$BRANCH" "$GIT"
+        echo 25
+        cd "$GIT"
+        bash install.sh >> "$LOGFILE" 2>&1
+        echo 100
+    } | whiptail --backtitle "$BACKTITLETEXT" --title "Impostando graphs1090"  --gauge "\nImpostando graphs1090.\nPotrebbe impiegarci qualche minuto..." 8 60 0
+    fi
 fi
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Se lo desideri, lascia una email per iscriverti alla nostra newsletter (Non più di una email al mese)." 10 70
-MAIL=$?
-if [ $MAIL = 0 ];   then
-    set -e
-    trap 'echo "------------"; echo "[ERROR] Error in line $LINENO when executing: $BASH_COMMAND"' ERR
-    email=$(whiptail --backtitle "$BACKTITLETEXT" --title "Email"  --inputbox "\nInserisci la tua email" 8 60 3>&1 1>&2 2>&3)
-    curl -d "mail=$email" https://flyitalyadsb.com/newsletter.php >> $LOGFILE 2>&1
+
+# Il decoder manda dati? Senza, non ci sono né feed né MLAT.
+HAS_DATA=1
+if command -v nc &>/dev/null && ! nc -z 127.0.0.1 30005; then
+    HAS_DATA=0
 fi
+
+# LIGHTCONE: chiedo il codice del ricevitore. Dopo il riavvio la MLAT può
+# metterci un minuto a collegarsi: se "ancora nessun dato MLAT", richiedo una
+# volta, 30 secondi dopo.
+LIGHTCONE_TEXT="Lightcone: https://flyitalyadsb.com/community/lightcone/
+Per collegare un dispositivo esegui: flyitalyadsb-lightcone"
+if [ $HAS_DATA = 1 ] && [ -x /usr/local/bin/flyitalyadsb-lightcone ]; then
+    LC_OUT=$(mktemp)
+    {
+        echo 5
+        for TRY in 1 2; do
+            /usr/local/bin/flyitalyadsb-lightcone --it > "$LC_OUT" 2>&1
+            if [ $? -ne 2 ] || [ $TRY -eq 2 ]; then
+                break
+            fi
+            for i in $(seq 1 30); do echo $((5 + i * 3)); sleep 1; done
+        done
+        echo 100
+    } | whiptail --backtitle "$BACKTITLETEXT" --title "Lightcone" --gauge "\nChiedo a FlyItalyADSB il tuo codice per Lightcone.\nPuò servire fino a un minuto..." 8 60 0
+    LIGHTCONE_TEXT=$(cat "$LC_OUT")
+    rm -f "$LC_OUT"
+fi
+LIGHTCONE_TEXT=$(echo "$LIGHTCONE_TEXT" | sed -e '1s/^Lightcone: //' -e 's/^/  /')
 
 
 ## SETUP COMPLETE
 
-ENDTEXT="
-Installazione completata: il tuo ricevitore ora manda i dati a FlyItalyADSB.
-Controlla che i dati arrivino, da un dispositivo sulla rete del ricevitore:
----------------------
-https://flyitalyadsb.com/community/stato-feeder/
----------------------
+ENDTEXT="Installazione completata: il tuo ricevitore ora manda i dati e la
+MLAT a FlyItalyADSB.
+
 Cosa ottieni mandandoci i dati:
-- l'API con i limiti Pro, gratis, per uso non commerciale.
+- L'API con i limiti Pro, gratis, per uso non commerciale.
   Attivali da La mia API, dalla rete del ricevitore:
   https://flyitalyadsb.com/dati/api/account/
-- Lightcone: gli aerei passati vicino a te che non hai ricevuto,
-  e come vai rispetto ai ricevitori vicini:
-  https://flyitalyadsb.com/community/lightcone/
----------------------
-Problemi o suggerimenti: https://flyitalyadsb.com/contatti/
-oppure installazione@flyitalyadsb.com
-"
-if [ $STATS = 0 ]; then
-{
-UUID_FILE="/boot/flyitalyadsb-uuid"
-if ! [[ -f "$UUID_FILE" ]]; then
-    UUID_FILE="/usr/local/share/flyitalyadsb/flyitalyadsb-uuid"
-fi
-SED=$(echo "$a" |sed -e 's$^$https://statistiche.flyitalyadsb.com/login?uuid=$' "$UUID_FILE")
-ENDTEXT+="
----------------------
-Per vedere i grafici statistici e la mappa in tempo reale accessibile da remoto puoi andare alla pagina:
-${SED}&user=$FLYITALYADSB_
----------------------
-Puoi recuperare questo link eseguendo: flyitalyadsb-showurl
-"
-}
-fi
+- Lightcone: gli aerei passati vicino a te che il tuo ricevitore non
+  ha ricevuto, e come vai rispetto ai ricevitori vicini.
+  Dalla rete del ricevitore la pagina riconosce il tuo ricevitore:
+${LIGHTCONE_TEXT}
 
-if ! nc -z 127.0.0.1 30005 && command -v nc &>/dev/null; then
-ENDTEXT2="
+I miei dati arrivano? Apri questa pagina dalla rete del ricevitore:
+https://flyitalyadsb.com/community/stato-feeder/
+
+Problemi: https://flyitalyadsb.com/contatti/
+oppure installazione@flyitalyadsb.com"
+
+if [ $HAS_DATA = 0 ]; then
+    ENDTEXT2="
 ---------------------
-Nessun dato disponibile sulla porta 30005!
+Nessun dato sulla porta 30005!
 ---------------------
 Se non hai installato nessun decoder, la guida per i feeder
-configura un ricevitore da zero: https://flyitalyadsb.com/community/feeder/
+configura un ricevitore da zero:
+https://flyitalyadsb.com/community/feeder/
 Se il feed deve ricevere i dati da un'altra porta o IP, cambia INPUT
 in /etc/default/flyitalyadsb e riavvia flyitalyadsb-feed e
 flyitalyadsb-mlat.
 --------------------
 "
-if [ -f /etc/fr24feed.ini ] || [ -f /etc/rb24.ini ]; then
-ENDTEXT2+="
-Sembra che stai usando FR24 o BR24
-Questo significa che devi abilitare la trasmissione dei dati sulla porta 30005! Per farlo:
-- vai alla pagina: ip_del_tuo_raspberry:8754/settings.
-- in \"process arguments\" aggiungi \" --net\" 
-- imposta NO in RAW DATA, SBS FEED e DECODED DATA.
---Premi \"Save\" e poi \"restart\" 
-Se non ti dovesse ancora funzionare, scrivici a installazione@flyitalyadsb.com
+    if [ -f /etc/fr24feed.ini ] || [ -f /etc/rb24.ini ]; then
+        ENDTEXT2+="
+Sembra che usi FR24 o RB24: attiva l'uscita dei dati sulla
+porta 30005. Per farlo:
+- apri ip_del_tuo_raspberry:8754/settings
+- in \"Process arguments\" aggiungi \" --net\"
+- imposta NO in RAW DATA, SBS FEED e DECODED DATA
+- premi \"Save\" e poi \"Restart\"
+Se ancora non funziona, scrivici a installazione@flyitalyadsb.com
 ---------------------
 "
-else
-ENDTEXT2+="
-Se hai connesso a questo dispositivo una chiavetta SDR ma non hai 
+    else
+        ENDTEXT2+="
+Se hai collegato una chiavetta SDR a questo dispositivo ma non hai
 ancora installato il decoder, la guida per i feeder lo spiega:
 https://flyitalyadsb.com/community/feeder/
 ---------------------
 "
-fi
-    sleep 3
-    whiptail --title "Script di installazione del feed di FlyItalyADSB" --msgbox "$ENDTEXT2" 27 73
+    fi
+    ENDTEXT2+="
+Quando i dati arrivano hai l'API con i limiti Pro, gratis, e
+Lightcone. Allora esegui flyitalyadsb-lightcone per il tuo codice.
+"
+    whiptail --title "Script di installazione del feed di FlyItalyADSB" --scrolltext --msgbox "$ENDTEXT2" 27 73
     echo -e "$ENDTEXT2"
 else
     # Display the thank you message box.
-    whiptail --title "Script di installazione del feed di FlyItalyADSB" --msgbox "$ENDTEXT" 27 73
+    whiptail --title "Script di installazione del feed di FlyItalyADSB" --scrolltext --msgbox "$ENDTEXT" 27 73
     echo -e "$ENDTEXT"
 fi
 
