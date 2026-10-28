@@ -95,12 +95,12 @@ LOGDIRECTORY="$PWD/logs"
 
 ## WHIPTAIL DIALOGS
 
-BACKTITLETEXT="Fly Italy Adsb's feed installation script"
+BACKTITLETEXT="FlyItalyADSB feed installation script"
 
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button YES --no-button NO --yesno "Thank you for choosing to share your data with Fly Italy Adsb.\n\nFly Italy Adsb is the first italian community dealing with ADS-B. This script will automatically set up your receiver allowing it to share his data with Fly Italy Adsb\n\nDo you want to continue with the installation?" 13 78
+whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button YES --no-button NO --yesno "Thank you for choosing to share your data with FlyItalyADSB.\n\nFlyItalyADSB is a community network born in Italy, with receivers all over the world. This script sets up your receiver to send its data and MLAT to FlyItalyADSB.\n\nDo you want to continue with the installation?" 13 78
 if [[ $? != 0 ]]; then abort; fi
 
-FLYITALYADSB_=$(whiptail --backtitle "$BACKTITLETEXT" --title "User name" --nocancel --inputbox "\nPlease insert a name for your receiver (http://flyitalyadsb.com/stato-mlat)\n\nUse only letters or numbers.\nExample: \"Giorgio34\", \"Piacenza1\", etc." 12 78 3>&1 1>&2 2>&3)
+FLYITALYADSB_=$(whiptail --backtitle "$BACKTITLETEXT" --title "User name" --nocancel --inputbox "\nPlease insert a name for your receiver: it identifies it in the MLAT network.\n\nUse only letters or numbers.\nExample: \"Station1\", \"Hilltop42\", etc." 12 78 3>&1 1>&2 2>&3)
 
 if [[ $? != 0 ]]; then abort; fi
 
@@ -153,7 +153,7 @@ RECEIVERALTITUDE="$ALT"
 
 
 
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button YES --no-button NO --yesno "Now you're ready to share your data with Fly Italy Adsb.\nBy proceeding you declare that you have read and accepted our terms and conditions displayed at the following link https://www.flyitalyadsb.com/informazioni-legali-e-privacy/\n\nDo you want to proceed?" 10 78
+whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button YES --no-button NO --yesno "Now you're ready to share your data with FlyItalyADSB.\nBy proceeding you declare that you have read and accepted our terms (https://flyitalyadsb.com/en/terms/) and privacy policy (https://flyitalyadsb.com/en/privacy/).\n\nDo you want to proceed?" 12 78
 CONTINUESETUP=$?
 if [ $CONTINUESETUP = 1 ]; then
     exit 0
@@ -434,9 +434,9 @@ EOF
 
     echo "Updater correctly installed" >> $LOGFILE 2>&1
 
-} | whiptail --backtitle "$BACKTITLETEXT" --title "Setting up Fly Italy Adsb's feed"  --gauge "\nSetting up Fly Italy Adsb's feed.\nIt could take a few minutes..." 8 60 0
+} | whiptail --backtitle "$BACKTITLETEXT" --title "Setting up the FlyItalyADSB feed"  --gauge "\nSetting up the FlyItalyADSB feed.\nIt could take a few minutes..." 8 60 0
 
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button YES --no-button NO --yesno "Do you want to install a map with all the planes that \nyou are receiving at this moment?\nIt will be accessibile at your_ip/flyitalyadsb" 9 70 0 
+whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button YES --no-button NO --yesno "Do you want to install a map with all the planes that \nyou are receiving at this moment?\nIt will be accessible at your_ip/flyitalyadsb" 9 70 0 
 INTERFACCIA=$?
 if [ $INTERFACCIA = 0 ]; then
 {   
@@ -449,10 +449,10 @@ if [ $INTERFACCIA = 0 ]; then
     GIT="/usr/local/share/tar1090/git"
     getGIT "$REPO" "$BRANCH" "$GIT" 
     bash "$GIT/install.sh" "/run/flyitalyadsb-feed" "flyitalyadsb"
-}| whiptail --backtitle "$BACKTITLETEXT" --title "Setting up Fly Italy Adsb's interface"  --gauge "\nSetting up Fly Italy Adsb's interface.\nIt could take a few minutes..." 8 60 0
+}| whiptail --backtitle "$BACKTITLETEXT" --title "Setting up the FlyItalyADSB map"  --gauge "\nSetting up the FlyItalyADSB map.\nIt could take a few minutes..." 8 60 0
 fi
 
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "If you want subscribe to ours newsletter (Not more than a mail a month)." 10 70
+whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button YES --no-button NO --yesno "If you want subscribe to ours newsletter (Not more than a mail a month)." 10 70
 MAIL=$?
 if [ $MAIL = 0 ]; then
     set -e
@@ -465,15 +465,21 @@ fi
 ## SETUP COMPLETE
 
 ENDTEXT="
-You completed the installation. You are now sharing your data with Fly Italy Adsb.
-You can check the status of your receiver at this page:
+Installation complete: your receiver now sends its data to FlyItalyADSB.
+Check that your data arrives, from a device on the receiver's network:
 ---------------------
-https://www.flyitalyadsb.com/stato-mlat/?peer_id=${FLYITALYADSB_}
+https://flyitalyadsb.com/en/community/feeder-status/
 ---------------------
-If you have any problem regarding the installation of the feed or if you'd like to give us some advice, visit the following website: 
-https://www.flyitalyadsb.com
-or send us an email directly at this address: 
-mail to:installazione@flyitalyadsb.com
+What feeding gets you:
+- the API with Pro limits, free, for non-commercial use.
+  Turn it on in My API, from the receiver's network:
+  https://flyitalyadsb.com/en/data/api/account/
+- Lightcone: the aircraft that passed near you and you did not
+  receive, and how you compare with the receivers near you:
+  https://flyitalyadsb.com/en/community/lightcone/
+---------------------
+Problems or advice: https://flyitalyadsb.com/en/contact/
+or installazione@flyitalyadsb.com
 "
 
 
@@ -482,10 +488,11 @@ if ! nc -z 127.0.0.1 30005 && command -v nc &>/dev/null; then
 ---------------------
 No available data on the 30005 port! 
 ---------------------
-If you haven't installed any decoder visit this page: 
-https://www.flyitalyadsb.com/come-costruire-un-ricevitore-ads-b/#installazione-dump1090-fa
-If the feed receives the data from another port/ip go to this link: 
-https://flyitalyadsb.com/configurazione-script
+If you haven't installed any decoder, the feeder guide sets up
+a receiver from scratch: https://flyitalyadsb.com/en/community/feeder/
+If the feed gets its data from another port or IP, change INPUT
+in /etc/default/flyitalyadsb and restart flyitalyadsb-feed and
+flyitalyadsb-mlat.
 --------------------
 "
     if [ -f /etc/fr24feed.ini ] || [ -f /etc/rb24.ini ]; then
@@ -496,22 +503,22 @@ This means that you have to enable the data trasmission on the 30005 port! To do
 - in \"process arguments\" add \" --net\" 
 - set NO in RAW DATA, SBS FEED and DECODED DATA.
 --Press \"Save\" and then \"restart\" 
-If it still wont be working, write us to the following email:installazione@flyitalyadsb.com
+If it still does not work, write to installazione@flyitalyadsb.com
 ---------------------
 "
     else
         ENDTEXT2+="
 If you have connected a SDR to this device but you still 
-haven't installed the decoder, visit this page:
-https://www.flyitalyadsb.com/come-costruire-un-ricevitore-ads-b/#installazione-dump1090-fa
+haven't installed the decoder, the feeder guide explains it:
+https://flyitalyadsb.com/en/community/feeder/
 ---------------------
 "
     fi
-    whiptail --title "Installation script of Fly Italy Adsb's feed" --msgbox "$ENDTEXT2" 27 73
+    whiptail --title "FlyItalyADSB feed installation script" --msgbox "$ENDTEXT2" 27 73
     echo -e "$ENDTEXT2"
 else
     # Display the thank you message box.
-    whiptail --title "Installation script of Fly Italy Adsb's feed" --msgbox "$ENDTEXT" 27 73 
+    whiptail --title "FlyItalyADSB feed installation script" --msgbox "$ENDTEXT" 27 73 
     echo -e "$ENDTEXT"
 fi
 

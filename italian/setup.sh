@@ -94,18 +94,18 @@ LOGDIRECTORY="$PWD/logs"
 
 ## WHIPTAIL DIALOGS
 
-BACKTITLETEXT="Script di installazione del feed di Fly Italy Adsb"
+BACKTITLETEXT="Script di installazione del feed di FlyItalyADSB"
 
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Grazie per aver scelto di condividere i tuoi dati con Fly Italy Adsb.\n\nFly Italy Adsb è la prima community italiana che tratta di ADS-B. Questo script configurerà in automatico il tuo ricevitore per condividere i dati con Fly Italy Adsb\n\nVuoi continuare con l'installazione?" 13 78
+whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Grazie per aver scelto di condividere i tuoi dati con FlyItalyADSB.\n\nFlyItalyADSB è una rete community nata in Italia, con ricevitori in tutto il mondo. Questo script configura il tuo ricevitore per mandare i dati e la MLAT a FlyItalyADSB.\n\nVuoi continuare con l'installazione?" 13 78
 if [[ $? != 0 ]]; then abort; fi
 
-FLYITALYADSB_=$(whiptail --backtitle "$BACKTITLETEXT" --title "Nome utente" --nocancel --inputbox "\nPer favore inserisci un nome per il tuo ricevitore (http://flyitalyadsb.com/stato-mlat)\n\nUsa solo lettere e numeri.\nEsempio: \"Giorgio34\", \"Piacenza1\", etc." 12 78 3>&1 1>&2 2>&3)
+FLYITALYADSB_=$(whiptail --backtitle "$BACKTITLETEXT" --title "Nome utente" --nocancel --inputbox "\nPer favore inserisci un nome per il tuo ricevitore: lo identifica nella rete MLAT.\n\nUsa solo lettere e numeri.\nEsempio: \"Giorgio34\", \"Piacenza1\", etc." 12 78 3>&1 1>&2 2>&3)
 
 if [[ $? != 0 ]]; then abort; fi
 
 whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" \
     --msgbox "Affinché la multilaterazione funzioni inserisci con precisione la posizione dell'antenna\
-    \n\nUn errore di 5 metri casuerà gravi problemi!\
+    \n\nUn errore di 5 metri causerà gravi problemi!\
     \n\nPer ottenere le coordinate puoi usare un sito web come mapcoordinates.net" 12 78
 
 if [[ $? != 0 ]]; then abort; fi
@@ -150,7 +150,7 @@ fi
 
 RECEIVERALTITUDE="$ALT"
 
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Ora sei pronto per condividere i tuoi dati con Fly Italy Adsb.\nProseguendo dichiari di aver letto e accettato le nostre condizioni di utilizzo accessibili a www.flyitalyadsb.com/informazioni-legali-e-privacy\n\nVuoi continuare?" 9 78
+whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Ora sei pronto per condividere i tuoi dati con FlyItalyADSB.\nProseguendo dichiari di aver letto e accettato i termini (https://flyitalyadsb.com/termini/) e l'informativa privacy (https://flyitalyadsb.com/privacy/).\n\nVuoi continuare?" 12 78
 CONTINUESETUP=$?
 if [ $CONTINUESETUP = 1 ]; then
     exit 0
@@ -437,7 +437,7 @@ EOF
 
     echo "Updater installato correttamente" >> $LOGFILE 2>&1
 
-} | whiptail --backtitle "$BACKTITLETEXT" --title "Impostando il feed di Fly Italy Adsb"  --gauge "\nImpostando il feed di Fly Italy Adsb.\nPotrebbe impiegarci qualche minuto..." 8 60 0
+} | whiptail --backtitle "$BACKTITLETEXT" --title "Impostando il feed di FlyItalyADSB"  --gauge "\nImpostando il feed di FlyItalyADSB.\nPotrebbe impiegarci qualche minuto..." 8 60 0
 
 whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Vuoi installare una mappa in cui sono visibili gli aerei che \nstai ricevendo in questo momento?\nSarà accessibile in locale a tuo_ip/flyitalyadsb" 9 70 0
 INTERFACCIA=$?
@@ -450,7 +450,7 @@ if [ $INTERFACCIA = 0 ]; then
     GIT="/usr/local/share/tar1090/git"
     getGIT "$REPO" "$BRANCH" "$GIT"
     bash "$GIT/install.sh" "/run/flyitalyadsb-feed" "flyitalyadsb" >> $LOGFILE 2>&1
-}| whiptail --backtitle "$BACKTITLETEXT" --title "Impostando l'interfaccia di Fly Italy Adsb"  --gauge "\nImpostando l'interfaccia di Fly Italy Adsb.\nPotrebbe impiegarci qualche minuto..." 8 60 0
+}| whiptail --backtitle "$BACKTITLETEXT" --title "Impostando la mappa di FlyItalyADSB"  --gauge "\nImpostando la mappa di FlyItalyADSB.\nPotrebbe impiegarci qualche minuto..." 8 60 0
 fi
 whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Vuoi avere dei grafici statistici sul tuo ricevitore e una mappa\ncon i dati che stai ricevendo accessibile ovunque?" 10 70
 STATS=$?
@@ -477,7 +477,7 @@ cd "$TMP_STATS"
 echo 75
 bash install.sh >> $LOGFILE 2>&1
 echo 90
-} | whiptail --backtitle "$BACKTITLETEXT" --title "Impostando il pacchetto di statistiche di Fly Italy Adsb"  --gauge "\nImpostando il pacchetto di statistiche di Fly Italy Adsb.\nPotrebbe impiegarci qualche minuto..." 8 60 0
+} | whiptail --backtitle "$BACKTITLETEXT" --title "Impostando il pacchetto di statistiche di FlyItalyADSB"  --gauge "\nImpostando il pacchetto di statistiche di FlyItalyADSB.\nPotrebbe impiegarci qualche minuto..." 8 60 0
 fi
 whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Se lo desideri, lascia una email per iscriverti alla nostra newsletter (Non più di una email al mese)." 10 70
 MAIL=$?
@@ -492,15 +492,21 @@ fi
 ## SETUP COMPLETE
 
 ENDTEXT="
-L'installazione è stata completata. Ora stai condividendo i tuoi dati con Fly Italy Adsb.
-Puoi controllare lo stato del tuo ricevitore a questa pagina:
+Installazione completata: il tuo ricevitore ora manda i dati a FlyItalyADSB.
+Controlla che i dati arrivino, da un dispositivo sulla rete del ricevitore:
 ---------------------
-https://www.flyitalyadsb.com/stato-mlat/?peer_id=${FLYITALYADSB_}
+https://flyitalyadsb.com/community/stato-feeder/
 ---------------------
-Se hai incontrato qualche problema nell'installazione del feed o vorresti darci qualche suggerimento visita:
-https://www.flyitalyadsb.com
-oppure mandaci direttamente una email all'indirizzo:
-mailto:installazione@flyitalyadsb.com
+Cosa ottieni mandandoci i dati:
+- l'API con i limiti Pro, gratis, per uso non commerciale.
+  Attivali da La mia API, dalla rete del ricevitore:
+  https://flyitalyadsb.com/dati/api/account/
+- Lightcone: gli aerei passati vicino a te che non hai ricevuto,
+  e come vai rispetto ai ricevitori vicini:
+  https://flyitalyadsb.com/community/lightcone/
+---------------------
+Problemi o suggerimenti: https://flyitalyadsb.com/contatti/
+oppure installazione@flyitalyadsb.com
 "
 if [ $STATS = 0 ]; then
 {
@@ -524,10 +530,11 @@ ENDTEXT2="
 ---------------------
 Nessun dato disponibile sulla porta 30005!
 ---------------------
-Se non hai installato nessun decoder visita questa pagina:
-https://www.flyitalyadsb.com/come-costruire-un-ricevitore-ads-b/#installazione-dump1090-fa
-Se invece il feed deve ricevere i dati da un altra porta/ip vai a questo link:
-https://flyitalyadsb.com/configurazione-script
+Se non hai installato nessun decoder, la guida per i feeder
+configura un ricevitore da zero: https://flyitalyadsb.com/community/feeder/
+Se il feed deve ricevere i dati da un'altra porta o IP, cambia INPUT
+in /etc/default/flyitalyadsb e riavvia flyitalyadsb-feed e
+flyitalyadsb-mlat.
 --------------------
 "
 if [ -f /etc/fr24feed.ini ] || [ -f /etc/rb24.ini ]; then
@@ -538,23 +545,23 @@ Questo significa che devi abilitare la trasmissione dei dati sulla porta 30005! 
 - in \"process arguments\" aggiungi \" --net\" 
 - imposta NO in RAW DATA, SBS FEED e DECODED DATA.
 --Premi \"Save\" e poi \"restart\" 
-Se non ti dovesse ancora funzionare, scrivici a mailto:installazione@flyitalyadsb.com
+Se non ti dovesse ancora funzionare, scrivici a installazione@flyitalyadsb.com
 ---------------------
 "
 else
 ENDTEXT2+="
 Se hai connesso a questo dispositivo una chiavetta SDR ma non hai 
-ancora installato il decoder visita questa pagina:
-https://www.flyitalyadsb.com/come-costruire-un-ricevitore-ads-b/#installazione-dump1090-fa
+ancora installato il decoder, la guida per i feeder lo spiega:
+https://flyitalyadsb.com/community/feeder/
 ---------------------
 "
 fi
     sleep 3
-    whiptail --title "Script di installazione del feed di Fly Italy Adsb" --msgbox "$ENDTEXT2" 27 73
+    whiptail --title "Script di installazione del feed di FlyItalyADSB" --msgbox "$ENDTEXT2" 27 73
     echo -e "$ENDTEXT2"
 else
     # Display the thank you message box.
-    whiptail --title "Script di installazione del feed di Fly Italy Adsb" --msgbox "$ENDTEXT" 27 73
+    whiptail --title "Script di installazione del feed di FlyItalyADSB" --msgbox "$ENDTEXT" 27 73
     echo -e "$ENDTEXT"
 fi
 
