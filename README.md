@@ -12,8 +12,9 @@ Starting from scratch? Set up the receiver with ultrafeeder: see the
 
 ## What feeding gets you
 
-- **The API with Pro limits, free:** 300 requests a minute, 10 million a month, the whole
-  world, on your Free keys, for non-commercial use.
+- **The API with Pro's limits and features, free:** 300 requests a minute, 10 million a
+  month, the whole world, plus overflights, emergencies, tracks of the last 90 days and the
+  runway in use, on your Free keys, for non-commercial use.
   [Turn it on in My API](https://flyitalyadsb.com/en/data/api/account/?utm_source=github&utm_campaign=fly-italy-adsb)
   from your receiver's network.
 - **What flew past you:** [Lightcone](https://flyitalyadsb.com/en/community/lightcone/?utm_source=github&utm_campaign=fly-italy-adsb)
@@ -127,8 +128,9 @@ ricevitore a Lightcone. Parti da zero? Configura il ricevitore con ultrafeeder: 
 
 **Cosa ottieni mandandoci i dati:**
 
-- **l'API con i limiti Pro, gratis:** 300 richieste al minuto, 10 milioni al mese, tutto il
-  mondo, sulle tue chiavi Free, per uso non commerciale.
+- **l'API con i limiti e le funzioni di Pro, gratis:** 300 richieste al minuto, 10 milioni
+  al mese, tutto il mondo, più sorvoli, emergenze, tracce degli ultimi 90 giorni e pista in
+  uso, sulle tue chiavi Free, per uso non commerciale.
   [Attivali da La mia API](https://flyitalyadsb.com/dati/api/account/?utm_source=github&utm_campaign=fly-italy-adsb)
   dalla rete del ricevitore;
 - **cosa ti è passato accanto:** [Lightcone](https://flyitalyadsb.com/community/lightcone/?utm_source=github&utm_campaign=fly-italy-adsb)
