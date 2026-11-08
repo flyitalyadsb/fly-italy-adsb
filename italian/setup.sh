@@ -96,7 +96,7 @@ LOGDIRECTORY="$PWD/logs"
 
 BACKTITLETEXT="Script di installazione del feed di FlyItalyADSB"
 
-whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Grazie per aver scelto di condividere i tuoi dati con FlyItalyADSB, una rete community globale, nata in Italia nel 2020.\n\nQuesto script manda a FlyItalyADSB i dati e la MLAT del tuo ricevitore. Serve un decoder che gira già su questo dispositivo (dump1090-fa, readsb, PiAware, FR24...). Parti da zero? Segui invece la guida per i feeder:\nhttps://flyitalyadsb.com/community/feeder/\n\nCosa ottieni: l'API con i limiti Pro, gratis, per uso non commerciale, e Lightcone: gli aerei passati vicino al tuo ricevitore che non ha ricevuto.\n\nVuoi continuare con l'installazione?" 20 78
+whiptail --backtitle "$BACKTITLETEXT" --title "$BACKTITLETEXT" --yes-button SI --no-button NO --yesno "Grazie per aver scelto di condividere i tuoi dati con FlyItalyADSB, una rete community globale, nata in Italia nel 2020.\n\nQuesto script manda a FlyItalyADSB i dati e la MLAT del tuo ricevitore. Serve un decoder che gira già su questo dispositivo (dump1090-fa, readsb, PiAware, FR24...). Parti da zero? Segui invece la guida per i feeder:\nhttps://flyitalyadsb.com/community/feeder/\n\nCosa ottieni: l'API con i limiti e le funzioni di Pro, gratis, per uso non commerciale, e Lightcone: gli aerei passati vicino al tuo ricevitore che non ha ricevuto.\n\nVuoi continuare con l'installazione?" 20 78
 if [[ $? != 0 ]]; then abort; fi
 
 FLYITALYADSB_=$(whiptail --backtitle "$BACKTITLETEXT" --title "Nome utente" --nocancel --inputbox "\nPer favore inserisci un nome per il tuo ricevitore: lo identifica nella rete MLAT.\n\nUsa solo lettere e numeri.\nEsempio: \"Giorgio34\", \"Piacenza1\", etc." 12 78 3>&1 1>&2 2>&3)
@@ -528,7 +528,7 @@ ENDTEXT="Installazione completata: il tuo ricevitore ora manda i dati e la
 MLAT a FlyItalyADSB.
 
 Cosa ottieni mandandoci i dati:
-- L'API con i limiti Pro, gratis, per uso non commerciale.
+- L'API con i limiti e le funzioni di Pro, gratis, per uso non commerciale.
   Attivali da La mia API, dalla rete del ricevitore:
   https://flyitalyadsb.com/dati/api/account/
 - Lightcone: gli aerei passati vicino a te che il tuo ricevitore non
@@ -575,8 +575,9 @@ https://flyitalyadsb.com/community/feeder/
 "
     fi
     ENDTEXT2+="
-Quando i dati arrivano hai l'API con i limiti Pro, gratis, e
-Lightcone. Allora esegui flyitalyadsb-lightcone per il tuo codice.
+Quando i dati arrivano hai l'API con i limiti e le funzioni di
+Pro, gratis, e Lightcone. Allora esegui flyitalyadsb-lightcone
+per il tuo codice.
 "
     whiptail --title "Script di installazione del feed di FlyItalyADSB" --scrolltext --msgbox "$ENDTEXT2" 27 73
     echo -e "$ENDTEXT2"
